@@ -1,0 +1,15 @@
+<template>
+    <lightning-layout multiple-rows>
+        <lightning-layout-item size="6">
+            <c-speaker-search onsearch={handleSearch}></c-speaker-search>
+            <c-speaker-list
+                speakers={speakers}
+                onselectspeaker={handleSelectSpeaker}>
+            </c-speaker-list>
+        </lightning-layout-item>
+
+        <lightning-layout-item size="6">
+            <c-book-session speaker-id={selectedSpeakerId}></c-book-session>
+        </lightning-layout-item>
+    </lightning-layout>
+</template>

@@ -1,0 +1,25 @@
+<template>
+    <lightning-card title="Speaker Search">
+        <div class="slds-p-around_small">
+            <lightning-input
+                label="Name"
+                value={name}
+                onchange={handleNameChange}>
+            </lightning-input>
+
+            <lightning-combobox
+                label="Speciality"
+                value={speciality}
+                placeholder="Select Speciality"
+                options={specialityOptions}
+                onchange={handleSpecialityChange}>
+            </lightning-combobox>
+
+            <lightning-button
+                label="Search"
+                onclick={handleSearch}
+                class="slds-m-top_small">
+            </lightning-button>
+        </div>
+    </lightning-card>
+</template>
