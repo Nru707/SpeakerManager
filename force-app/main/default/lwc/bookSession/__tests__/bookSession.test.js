@@ -1,4 +1,4 @@
-import { createElement } from 'lwc';
+import { createElement } from '@lwc/engine-dom';
 import BookSession from 'c/bookSession';
 
 describe('c-book-session', () => {

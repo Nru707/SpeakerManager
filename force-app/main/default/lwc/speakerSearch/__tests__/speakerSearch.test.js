@@ -1,4 +1,4 @@
-import { createElement } from 'lwc';
+import { createElement } from '@lwc/engine-dom';
 import SpeakerSearch from 'c/speakerSearch';
 
 describe('c-speaker-search', () => {
