@@ -3,6 +3,7 @@ import getSpeakerDetails from '@salesforce/apex/SpeakerController.getSpeakerDeta
 import checkAvailability from '@salesforce/apex/SpeakerController.checkAvailability';
 import createSession from '@salesforce/apex/SpeakerController.createSession';
 import createAssignment from '@salesforce/apex/SpeakerController.createAssignment';
+import getBookedDates from '@salesforce/apex/SpeakerController.getBookedDates';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 
 export default class BookSession extends LightningElement {
@@ -12,8 +13,8 @@ export default class BookSession extends LightningElement {
     selectedDate;
     isAvailable = false;
     calendarDates = [];
+    bookedDates = [];
 
-    // Reactive speakerId
     @api
     set speakerId(value) {
         this._speakerId = value;
@@ -28,78 +29,77 @@ export default class BookSession extends LightningElement {
 
     // Fetch speaker details
     @wire(getSpeakerDetails, { speakerId: '$_speakerId' })
-    wiredSpeaker({ data, error }) {
+    wiredSpeaker({ data }) {
         if (data) {
             this.speaker = data;
-            this.generateCalendar();
+            this.loadBookedDates();
         } else {
             this.speaker = null;
         }
     }
 
-    get today() {
-        return new Date().toISOString().split('T')[0];
+    // Load booked dates for speaker
+    loadBookedDates() {
+        getBookedDates({ speakerId: this._speakerId })
+            .then(data => {
+                this.bookedDates = data.map(d => new Date(d).toISOString().split('T')[0]);
+                this.generateCalendar();
+            })
+            .catch(error => {
+                console.error(error);
+                this.bookedDates = [];
+            });
     }
 
-    // Handle manual date input
-    handleDateChange(event) {
-        this.selectedDate = event.target.value;
-        this.checkAvailabilityForDate(this.selectedDate);
+    // Calendar today
+    get today() {
+        const t = new Date();
+        t.setHours(0,0,0,0);
+        return t.toISOString().split('T')[0];
     }
 
     // Handle calendar click
     selectCalendarDate(event) {
         const date = event.target.dataset.date;
-        if (date && !event.target.classList.contains('disabled')) {
-            this.selectedDate = date;
-            this.checkAvailabilityForDate(date);
-        }
+        if (!date) return;
+
+        // Check if disabled
+        if(event.target.classList.contains('past') || event.target.classList.contains('booked')) return;
+
+        this.selectedDate = date;
+        this.checkAvailabilityForDate(date);
     }
 
-    // Check availability for selected date
+    // Check if selected date is available
     checkAvailabilityForDate(date) {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const selected = new Date(date);
-        if (selected < today) {
-            this.showToast('Error', 'Date must be in the future', 'error');
-            this.isAvailable = false;
-            return;
-        }
-
         checkAvailability({ speakerId: this._speakerId, selectedDate: date })
             .then(result => {
                 this.isAvailable = result;
-                if (!result) {
-                    this.showToast('Error', 'Slot is already booked, try another date', 'error');
+                if(!result){
+                    this.showToast('Error', 'Slot already booked', 'error');
                 }
-                this.generateCalendar(); // refresh calendar
+                this.generateCalendar();
             })
             .catch(error => {
                 console.error(error);
-                this.showToast('Error', 'Failed to check availability', 'error');
                 this.isAvailable = false;
             });
     }
 
-    // Create session and assignment
+    // Create session & assignment
     handleCreate() {
         if (!this.selectedDate) {
             this.showToast('Error', 'Select a date first', 'error');
             return;
         }
 
-        // First create Session__c
         createSession({ sessionDate: this.selectedDate })
-            .then(sessionId => {
-                // Then create assignment
-                return createAssignment({ speakerId: this._speakerId, sessionId });
-            })
+            .then(sessionId => createAssignment({ speakerId: this._speakerId, sessionId }))
             .then(() => {
                 this.showToast('Success', 'Session booked successfully', 'success');
-                this.isAvailable = false;
                 this.selectedDate = null;
-                this.generateCalendar();
+                this.isAvailable = false;
+                this.loadBookedDates(); // refresh calendar
             })
             .catch(error => {
                 console.error(error);
@@ -115,16 +115,22 @@ export default class BookSession extends LightningElement {
         this.dispatchEvent(new ShowToastEvent({ title, message, variant }));
     }
 
-    // Generate simple 30-day calendar
+    // Generate 30-day calendar
     generateCalendar() {
         const dates = [];
         const today = new Date();
+        today.setHours(0,0,0,0);
+
         for (let i = 0; i < 30; i++) {
             const d = new Date();
             d.setDate(today.getDate() + i);
             const iso = d.toISOString().split('T')[0];
+
             let css = 'calendar-date';
-            if (this.selectedDate === iso) css += ' selected';
+            if(this.selectedDate === iso) css += ' selected';
+            if(d < today) css += ' past';
+            if(this.bookedDates.includes(iso)) css += ' booked';
+
             dates.push({ value: iso, label: d.getDate(), cssClass: css });
         }
         this.calendarDates = dates;

@@ -59,3 +59,38 @@ lightning-button {
     color: #d8dde6;
     cursor: not-allowed;
 }
+
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    margin-top: 10px;
+}
+
+.calendar-date {
+    text-align: center;
+    padding: 6px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.calendar-date.past {
+    color: #aaa;
+    cursor: not-allowed;
+}
+
+.calendar-date.booked {
+    background-color: #f8d7da;
+    color: #721c24;
+    cursor: not-allowed;
+}
+
+.calendar-date.selected {
+    background-color: #0070d2;
+    color: white;
+}
+.calendar-date:hover:not(.past):not(.booked):not(.selected) {
+    background-color: #e0e5ee;
+}

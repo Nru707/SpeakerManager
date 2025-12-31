@@ -1,6 +1,6 @@
 <template>
     <lightning-card title="Speaker Booking">
-        <!-- Initial / No speaker -->
+        <!-- No speaker selected -->
         <template if:false={speaker}>
             <p class="slds-p-around_medium">Select a speaker</p>
         </template>
@@ -12,22 +12,25 @@
                 <p><b>Speciality:</b> {speaker.Speciality__c}</p>
                 <p><b>Bio:</b> {speaker.Bio__c}</p>
 
-                <!-- Date selection -->
-                <lightning-input
-                    type="date"
-                    label="Select Date"
-                    onchange={handleDateChange}
-                    min={today}>
-                </lightning-input>
-
-                <lightning-button
-                    label="Create Assignment"
-                    variant="brand"
-                    disabled={disableCreate}
-                    onclick={handleCreate}
-                    class="slds-m-top_small">
-                </lightning-button>
+                <!-- Calendar -->
+                <div class="calendar-grid">
+                    <template for:each={calendarDates} for:item="date">
+                        <div key={date.value}
+                             class={date.cssClass}
+                             data-date={date.value}
+                             onclick={selectCalendarDate}>
+                            {date.label}
+                        </div>
+                    </template>
+                </div>
             </div>
+            <lightning-button
+                label="Book Session"
+                variant="brand"
+                disabled={disableCreate}
+                onclick={handleCreate}
+                class="slds-m-top_medium slds-p-top_small">
+            </lightning-button>
         </template>
     </lightning-card>
 </template>
