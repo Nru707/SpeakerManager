@@ -1,82 +1,132 @@
-import { LightningElement, api, track } from 'lwc';
+import { LightningElement, api, track, wire } from 'lwc';
+import getSpeakerDetails from '@salesforce/apex/SpeakerController.getSpeakerDetails';
 import checkAvailability from '@salesforce/apex/SpeakerController.checkAvailability';
+import createSession from '@salesforce/apex/SpeakerController.createSession';
 import createAssignment from '@salesforce/apex/SpeakerController.createAssignment';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
-import getSpeakerDetails from '@salesforce/apex/SpeakerController.getSpeakerDetails';
 
 export default class BookSession extends LightningElement {
-    @api speakerId; // selected from parent
-    @track speaker; // { Name, Bio, Speciality }
-    @track selectedDate;
-    @track canBook = false;
+    _speakerId;
 
-    // Getter for template-safe disabled property
-    get isBookingDisabled() {
-        return !this.canBook;
+    @track speaker;
+    selectedDate;
+    isAvailable = false;
+    calendarDates = [];
+
+    // Reactive speakerId
+    @api
+    set speakerId(value) {
+        this._speakerId = value;
+        this.speaker = null;
+        this.selectedDate = null;
+        this.isAvailable = false;
+        this.calendarDates = [];
+    }
+    get speakerId() {
+        return this._speakerId;
     }
 
-    // Watch for changes in speakerId
-    renderedCallback() {
-        if (this.speakerId && (!this.speaker || this.speaker.Id !== this.speakerId)) {
-            this.loadSpeakerDetails();
+    // Fetch speaker details
+    @wire(getSpeakerDetails, { speakerId: '$_speakerId' })
+    wiredSpeaker({ data, error }) {
+        if (data) {
+            this.speaker = data;
+            this.generateCalendar();
+        } else {
+            this.speaker = null;
         }
     }
 
-    async loadSpeakerDetails() {
-        try {
-            this.speaker = await getSpeakerDetails({ speakerId: this.speakerId });
-            this.selectedDate = null;
-            this.canBook = false;
-        } catch (error) {
-            console.error(error);
-            this.showToast('Error', 'Failed to load speaker details', 'error');
-        }
+    get today() {
+        return new Date().toISOString().split('T')[0];
     }
 
+    // Handle manual date input
     handleDateChange(event) {
         this.selectedDate = event.target.value;
-        this.canBook = false;
+        this.checkAvailabilityForDate(this.selectedDate);
+    }
 
-        if (this.selectedDate) {
-            const selected = new Date(this.selectedDate);
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-
-            if (selected < today) {
-                this.showToast('Error', 'Please select a future date', 'error');
-                return;
-            }
-
-            this.checkAvailability();
+    // Handle calendar click
+    selectCalendarDate(event) {
+        const date = event.target.dataset.date;
+        if (date && !event.target.classList.contains('disabled')) {
+            this.selectedDate = date;
+            this.checkAvailabilityForDate(date);
         }
     }
 
-    async checkAvailability() {
-        try {
-            const available = await checkAvailability({ speakerId: this.speakerId, date: this.selectedDate });
-            this.canBook = available;
-            if (!available) {
-                this.showToast('Error', 'Slot is already booked, try another date', 'error');
-            }
-        } catch (error) {
-            console.error(error);
-            this.showToast('Error', 'Failed to check availability', 'error');
+    // Check availability for selected date
+    checkAvailabilityForDate(date) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const selected = new Date(date);
+        if (selected < today) {
+            this.showToast('Error', 'Date must be in the future', 'error');
+            this.isAvailable = false;
+            return;
         }
+
+        checkAvailability({ speakerId: this._speakerId, selectedDate: date })
+            .then(result => {
+                this.isAvailable = result;
+                if (!result) {
+                    this.showToast('Error', 'Slot is already booked, try another date', 'error');
+                }
+                this.generateCalendar(); // refresh calendar
+            })
+            .catch(error => {
+                console.error(error);
+                this.showToast('Error', 'Failed to check availability', 'error');
+                this.isAvailable = false;
+            });
     }
 
-    async handleCreateAssignment() {
-        try {
-            // Example: sessionId can be dynamic or fixed; adjust as needed
-            await createAssignment({ speakerId: this.speakerId, sessionId: 'a0123456789ABCDE' });
-            this.showToast('Success', 'Speaker assigned successfully', 'success');
-            this.canBook = false;
-        } catch (error) {
-            console.error(error);
-            this.showToast('Error', 'Failed to create assignment', 'error');
+    // Create session and assignment
+    handleCreate() {
+        if (!this.selectedDate) {
+            this.showToast('Error', 'Select a date first', 'error');
+            return;
         }
+
+        // First create Session__c
+        createSession({ sessionDate: this.selectedDate })
+            .then(sessionId => {
+                // Then create assignment
+                return createAssignment({ speakerId: this._speakerId, sessionId });
+            })
+            .then(() => {
+                this.showToast('Success', 'Session booked successfully', 'success');
+                this.isAvailable = false;
+                this.selectedDate = null;
+                this.generateCalendar();
+            })
+            .catch(error => {
+                console.error(error);
+                this.showToast('Error', 'Booking failed', 'error');
+            });
+    }
+
+    get disableCreate() {
+        return !this.isAvailable;
     }
 
     showToast(title, message, variant) {
         this.dispatchEvent(new ShowToastEvent({ title, message, variant }));
+    }
+
+    // Generate simple 30-day calendar
+    generateCalendar() {
+        const dates = [];
+        const today = new Date();
+        for (let i = 0; i < 30; i++) {
+            const d = new Date();
+            d.setDate(today.getDate() + i);
+            const iso = d.toISOString().split('T')[0];
+            let css = 'calendar-date';
+            if (this.selectedDate === iso) css += ' selected';
+            dates.push({ value: iso, label: d.getDate(), cssClass: css });
+        }
+        this.calendarDates = dates;
     }
 }

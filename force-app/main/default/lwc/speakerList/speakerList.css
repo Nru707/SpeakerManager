@@ -1,0 +1,38 @@
+/* speakerList.css */
+
+/* Card padding and font */
+.lightning-card {
+    font-family: "Salesforce Sans", Arial, sans-serif;
+    color: #16325c; /* dark text */
+}
+
+/* Table row hover effect */
+.slds-table tbody tr:hover {
+    background-color: #f4f6f9; /* light gray */
+}
+
+/* Table header styling */
+.slds-table thead th {
+    background-color: #f3f6f9;
+    color: #16325c;
+    font-weight: bold;
+}
+
+/* Button inside datatable */
+.slds-button_brand {
+    background-color: #0070d2;
+    border-color: #0070d2;
+    color: #ffffff;
+}
+
+/* Optional: small padding for datatable cells */
+.slds-table td, .slds-table th {
+    padding: 0.5rem 0.75rem;
+    font-size: 14px;
+}
+
+/* Center align datatable button */
+.slds-table td .slds-button {
+    margin: auto;
+    display: block;
+}

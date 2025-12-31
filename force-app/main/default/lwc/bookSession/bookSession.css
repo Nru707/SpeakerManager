@@ -1,0 +1,61 @@
+/* bookSession.css */
+
+/* Card padding and text */
+.slds-p-around_medium {
+    padding: 1rem;
+    font-family: "Salesforce Sans", Arial, sans-serif;
+    color: #16325c; /* dark text */
+}
+
+/* Speaker details */
+p {
+    margin: 0.5rem 0;
+    font-size: 14px;
+}
+
+/* Bold labels */
+p b {
+    color: #0070d2; /* Salesforce blue */
+}
+
+/* Date input styling */
+lightning-input {
+    margin-top: 1rem;
+}
+
+/* Button styling */
+lightning-button {
+    margin-top: 1rem;
+}
+
+/* Calendar grid (if using simple calendar divs) */
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.3rem;
+    margin-top: 1rem;
+}
+
+/* Each date box */
+.calendar-date {
+    padding: 0.5rem;
+    text-align: center;
+    border-radius: 4px;
+    border: 1px solid #d8dde6;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+/* Selected date */
+.calendar-date.selected {
+    background-color: #0070d2;
+    color: #fff;
+    font-weight: bold;
+}
+
+/* Disabled / booked dates */
+.calendar-date.disabled {
+    background-color: #f4f6f9;
+    color: #d8dde6;
+    cursor: not-allowed;
+}

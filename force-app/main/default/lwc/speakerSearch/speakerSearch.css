@@ -1,0 +1,44 @@
+/* speakerSearch.css */
+
+/* General font and color */
+:host {
+    font-family: "Salesforce Sans", Arial, sans-serif;
+    color: #16325c;
+}
+
+/* Card styling */
+.lightning-card {
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    background-color: #ffffff;
+}
+
+/* Padding inside the card */
+.slds-p-around_medium {
+    padding: 1rem;
+}
+
+/* Spacing between input fields */
+lightning-input,
+lightning-combobox {
+    margin-bottom: 1rem;
+}
+
+/* Input field font style */
+lightning-input input,
+lightning-combobox .slds-select {
+    font-size: 0.95rem;
+    color: #16325c;
+}
+
+/* Responsive adjustments */
+@media screen and (max-width: 768px) {
+    .slds-p-around_medium {
+        padding: 0.5rem;
+    }
+    lightning-input,
+    lightning-combobox {
+        width: 100%;
+        margin-bottom: 0.75rem;
+    }
+}

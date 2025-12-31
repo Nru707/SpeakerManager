@@ -1,6 +1,7 @@
 import { LightningElement, track } from 'lwc';
 
 export default class SpeakerSearch extends LightningElement {
+
     @track name = '';
     @track speciality = '';
 
@@ -13,17 +14,18 @@ export default class SpeakerSearch extends LightningElement {
 
     handleNameChange(event) {
         this.name = event.target.value;
+        this.emitFilterChange();
     }
 
     handleSpecialityChange(event) {
         this.speciality = event.detail.value;
+        this.emitFilterChange();
     }
 
-    handleSearch() {
-        // Dispatch search parameters to parent (SpeakerManager)
-        const searchEvent = new CustomEvent('search', {
+    emitFilterChange() {
+        // Dispatch event to parent
+        this.dispatchEvent(new CustomEvent('filterchange', {
             detail: { name: this.name, speciality: this.speciality }
-        });
-        this.dispatchEvent(searchEvent);
+        }));
     }
 }
