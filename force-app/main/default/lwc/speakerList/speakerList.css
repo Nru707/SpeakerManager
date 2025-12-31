@@ -36,3 +36,15 @@
     margin: auto;
     display: block;
 }
+
+/* Add padding inside the datatable container */
+.custom-table .slds-table {
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
+/* Optional: adjust row padding */
+.custom-table .slds-cell {
+    padding-left: 12px;
+    padding-right: 12px;
+}
