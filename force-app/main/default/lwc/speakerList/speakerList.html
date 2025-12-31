@@ -1,11 +1,14 @@
 <template>
     <lightning-card title="Speakers">
-        <lightning-datatable
-            key-field="Id"
-            data={speakers}
-            columns={columns}
-            onrowaction={handleRowAction}
-            hide-checkbox-column>
-        </lightning-datatable>
+        <div class="slds-p-horizontal_medium slds-p-vertical_small">
+            <lightning-datatable
+                key-field="Id"
+                data={speakers}
+                columns={columns}
+                onrowaction={handleRowAction}
+                hide-checkbox-column
+                class="custom-table">
+            </lightning-datatable>
+        </div>
     </lightning-card>
 </template>
