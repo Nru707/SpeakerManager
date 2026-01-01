@@ -1,6 +1,6 @@
 public with sharing class SpeakerController {
 
-    // 🔍 Search Speakers
+    //Search Speakers
     @AuraEnabled(cacheable=true)
     public static List<Speaker__c> searchSpeakers(String name, String speciality) {
 
@@ -29,7 +29,7 @@ public with sharing class SpeakerController {
         return Database.queryWithBinds(soql, params, AccessLevel.USER_MODE);
     }
 
-    // 🔹 Speaker Details
+    // Speaker Details
     @AuraEnabled(cacheable=true)
     public static Speaker__c getSpeakerDetails(Id speakerId) {
         if (!Schema.SObjectType.Speaker__c.isAccessible()) {
@@ -45,7 +45,7 @@ public with sharing class SpeakerController {
         ];
     }
 
-    // 🔹 Booked Dates for Calendar
+    // Booked Dates for Calendar
     @AuraEnabled(cacheable=true)
     public static List<Date> getBookedDates(Id speakerId) {
         if (!Schema.SObjectType.Speaker_Assignment__c.isAccessible()) {
@@ -69,7 +69,7 @@ public with sharing class SpeakerController {
         return bookedDates;
     }
 
-    // 🔹 Availability Check
+    //  Availability Check
     @AuraEnabled
     public static Boolean checkAvailability(Id speakerId, Date selectedDate) {
         if (!Schema.SObjectType.Speaker_Assignment__c.isAccessible()) {
@@ -88,7 +88,7 @@ public with sharing class SpeakerController {
         return sa.isEmpty();
     }
 
-    // 🔹 Create Session (with CRUD/FLS check)
+    // Create Session (with CRUD/FLS check)
     @AuraEnabled
     public static Id createSession(Date sessionDate) {
         if (!Schema.SObjectType.Session__c.isCreateable()) {
@@ -105,7 +105,7 @@ public with sharing class SpeakerController {
         return ((Session__c)decision.getRecords()[0]).Id;
     }
 
-    // 🔹 Create Assignment (with CRUD/FLS check)
+    // Create Assignment
     @AuraEnabled
     public static void createAssignment(Id speakerId, Id sessionId) {
         if (!Schema.SObjectType.Speaker_Assignment__c.isCreateable()) {
