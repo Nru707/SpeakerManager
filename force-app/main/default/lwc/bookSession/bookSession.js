@@ -26,7 +26,7 @@ export default class BookSession extends LightningElement {
         this.currentYear = today.getFullYear();
     }
 
-    // Speaker details
+    //Speaker details
     @wire(getSpeakerDetails, { speakerId: '$speakerId' })
     wiredSpeaker({ data }) {
         if (data) {
@@ -35,19 +35,24 @@ export default class BookSession extends LightningElement {
         }
     }
 
+    // Load booked dates
     loadBookedDates() {
         getBookedDates({ speakerId: this.speakerId })
             .then(data => {
-                this.bookedDates = data.map(d => new Date(d).toISOString().split('T')[0]);
+                this.bookedDates = data.map(
+                    d => new Date(d).toISOString().split('T')[0]
+                );
                 this.generateCalendar();
             });
     }
 
+    //  Month label
     get monthLabel() {
         return new Date(this.currentYear, this.currentMonth)
             .toLocaleString('default', { month: 'long', year: 'numeric' });
     }
 
+    // Next month
     nextMonth() {
         if (this.currentMonth === 11) {
             this.currentMonth = 0;
@@ -58,13 +63,14 @@ export default class BookSession extends LightningElement {
         this.generateCalendar();
     }
 
+    //  Previous month (no past)
     prevMonth() {
         const today = new Date();
         if (
             this.currentYear === today.getFullYear() &&
             this.currentMonth === today.getMonth()
         ) {
-            return; // ❌ past month not allowed
+            return;
         }
 
         if (this.currentMonth === 0) {
@@ -76,10 +82,17 @@ export default class BookSession extends LightningElement {
         this.generateCalendar();
     }
 
+    //  Weekday alignment
     generateCalendar() {
         const dates = [];
         const today = new Date();
-        today.setHours(0,0,0,0);
+        today.setHours(0, 0, 0, 0);
+
+        const firstDay = new Date(
+            this.currentYear,
+            this.currentMonth,
+            1
+        ).getDay(); // 0 = Sunday
 
         const daysInMonth = new Date(
             this.currentYear,
@@ -87,6 +100,16 @@ export default class BookSession extends LightningElement {
             0
         ).getDate();
 
+        // Empty cells before 1st date
+        for (let i = 0; i < firstDay; i++) {
+            dates.push({
+                label: '',
+                value: null,
+                cssClass: 'calendar-date empty'
+            });
+        }
+
+        // Actual dates
         for (let day = 1; day <= daysInMonth; day++) {
             const d = new Date(this.currentYear, this.currentMonth, day);
             const iso = d.toISOString().split('T')[0];
@@ -102,14 +125,18 @@ export default class BookSession extends LightningElement {
                 cssClass: css
             });
         }
+
         this.calendarDates = dates;
     }
 
+    // Date select
     selectCalendarDate(event) {
         const date = event.target.dataset.date;
+
         if (!date ||
             event.target.classList.contains('past') ||
-            event.target.classList.contains('booked')) {
+            event.target.classList.contains('booked') ||
+            event.target.classList.contains('empty')) {
             return;
         }
 
@@ -125,6 +152,7 @@ export default class BookSession extends LightningElement {
             });
     }
 
+    // Create session
     handleCreate() {
         createSession({ sessionDate: this.selectedDate })
             .then(sessionId =>
@@ -143,6 +171,8 @@ export default class BookSession extends LightningElement {
     }
 
     showToast(title, message, variant) {
-        this.dispatchEvent(new ShowToastEvent({ title, message, variant }));
+        this.dispatchEvent(
+            new ShowToastEvent({ title, message, variant })
+        );
     }
 }

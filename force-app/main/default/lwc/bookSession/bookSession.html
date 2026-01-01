@@ -1,6 +1,14 @@
 <template>
     <lightning-card title="Speaker Booking">
 
+        <!-- Legend (Top Right) -->
+        <template if:true={speaker}>
+            <div class="calendar-legend">
+                <span class="legend booked"></span>
+                <span>Already booked</span>
+            </div>
+        </template>
+
         <template if:true={speaker}>
             <div class="slds-p-around_medium">
                 <p><b>Name:</b> {speaker.Name}</p>
@@ -8,19 +16,32 @@
                 <p><b>Bio:</b> {speaker.Bio__c}</p>
 
                 <!-- Month Navigation -->
-                <div class="slds-grid slds-align_absolute-center slds-m-vertical_small">
-                    <lightning-button-icon icon-name="utility:chevronleft"
-                        onclick={prevMonth}></lightning-button-icon>
+                <div class="calendar-header">
+                    <lightning-button-icon
+                        icon-name="utility:chevronleft"
+                        onclick={prevMonth}>
+                    </lightning-button-icon>
 
-                    <span class="slds-p-horizontal_medium">
-                        {monthLabel}
-                    </span>
+                    <span class="month-label">{monthLabel}</span>
 
-                    <lightning-button-icon icon-name="utility:chevronright"
-                        onclick={nextMonth}></lightning-button-icon>
+                    <lightning-button-icon
+                        icon-name="utility:chevronright"
+                        onclick={nextMonth}>
+                    </lightning-button-icon>
                 </div>
 
-                <!-- Calendar -->
+                <!-- WEEK HEADER  -->
+                <div class="week-header">
+                    <div>Sun</div>
+                    <div>Mon</div>
+                    <div>Tue</div>
+                    <div>Wed</div>
+                    <div>Thu</div>
+                    <div>Fri</div>
+                    <div>Sat</div>
+                </div>
+
+                <!-- Calendar Dates -->
                 <div class="calendar-grid">
                     <template for:each={calendarDates} for:item="d">
                         <div key={d.value}
@@ -43,7 +64,9 @@
         </template>
 
         <template if:false={speaker}>
-            <p class="slds-p-around_medium">Select a speaker from speakers for the booking.</p>
+            <p class="slds-p-around_medium">
+                Select a speaker from speakers for the booking.
+            </p>
         </template>
 
     </lightning-card>
