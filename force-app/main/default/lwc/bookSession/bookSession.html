@@ -1,37 +1,50 @@
 <template>
     <lightning-card title="Speaker Booking">
-        <!-- No speaker selected -->
-        <template if:false={speaker}>
-            <p class="slds-p-around_medium">Select a speaker</p>
-        </template>
 
-        <!-- Speaker details -->
         <template if:true={speaker}>
             <div class="slds-p-around_medium">
                 <p><b>Name:</b> {speaker.Name}</p>
                 <p><b>Speciality:</b> {speaker.Speciality__c}</p>
                 <p><b>Bio:</b> {speaker.Bio__c}</p>
 
+                <!-- Month Navigation -->
+                <div class="slds-grid slds-align_absolute-center slds-m-vertical_small">
+                    <lightning-button-icon icon-name="utility:chevronleft"
+                        onclick={prevMonth}></lightning-button-icon>
+
+                    <span class="slds-p-horizontal_medium">
+                        {monthLabel}
+                    </span>
+
+                    <lightning-button-icon icon-name="utility:chevronright"
+                        onclick={nextMonth}></lightning-button-icon>
+                </div>
+
                 <!-- Calendar -->
                 <div class="calendar-grid">
-                    <template for:each={calendarDates} for:item="date">
-                        <div key={date.value}
-                             class={date.cssClass}
-                             data-date={date.value}
+                    <template for:each={calendarDates} for:item="d">
+                        <div key={d.value}
+                             data-date={d.value}
+                             class={d.cssClass}
                              onclick={selectCalendarDate}>
-                            {date.label}
+                            {d.label}
                         </div>
                     </template>
                 </div>
-            </div>
-            <lightning-button
-                label="Book Session"
-                variant="brand"
-                disabled={disableCreate}
-                onclick={handleCreate}
-                class="slds-m-around_medium slds-p-around_small">
-            </lightning-button>
 
+                <lightning-button
+                    label="Book Session"
+                    variant="brand"
+                    class="slds-m-top_medium"
+                    disabled={disableCreate}
+                    onclick={handleCreate}>
+                </lightning-button>
+            </div>
         </template>
+
+        <template if:false={speaker}>
+            <p class="slds-p-around_medium">Select a speaker</p>
+        </template>
+
     </lightning-card>
 </template>

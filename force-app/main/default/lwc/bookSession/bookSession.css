@@ -1,96 +1,89 @@
-/* bookSession.css */
-
-/* Card padding and text */
+/* ===== Card Content ===== */
 .slds-p-around_medium {
     padding: 1rem;
     font-family: "Salesforce Sans", Arial, sans-serif;
-    color: #16325c; /* dark text */
+    color: #16325c;
 }
 
-/* Speaker details */
+/* ===== Speaker Details ===== */
 p {
-    margin: 0.5rem 0;
+    margin: 0.4rem 0;
     font-size: 14px;
 }
 
-/* Bold labels */
 p b {
-    color: #0070d2; /* Salesforce blue */
+    color: #0070d2;
 }
 
-/* Date input styling */
-lightning-input {
-    margin-top: 1rem;
+/* ===== Calendar Header (Month / Year) ===== */
+.calendar-header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 14px;
+    margin: 12px 0;
+    font-size: 16px;
+    font-weight: 600;
 }
 
-/* Button styling */
-lightning-button {
-    margin-top: 1rem;
+.month-label {
+    min-width: 160px;
+    text-align: center;
 }
 
-/* Calendar grid (if using simple calendar divs) */
+/* ===== Calendar Grid ===== */
 .calendar-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 0.3rem;
-    margin-top: 1rem;
+    gap: 8px;
+    padding: 10px;
 }
 
-/* Each date box */
+/* ===== Date Cell ===== */
 .calendar-date {
-    padding: 0.5rem;
+    height: 38px;
+    line-height: 38px;
     text-align: center;
-    border-radius: 4px;
-    border: 1px solid #d8dde6;
-    cursor: pointer;
+    border-radius: 6px;
     font-size: 13px;
-}
-
-/* Selected date */
-.calendar-date.selected {
-    background-color: #0070d2;
-    color: #fff;
-    font-weight: bold;
-}
-
-/* Disabled / booked dates */
-.calendar-date.disabled {
-    background-color: #f4f6f9;
-    color: #d8dde6;
-    cursor: not-allowed;
-}
-
-
-.calendar-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 4px;
-    margin-top: 10px;
-}
-
-.calendar-date {
-    text-align: center;
-    padding: 6px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
     cursor: pointer;
+    background: #f3f3f3;
+    border: 1px solid #d8dde6;
+    transition: background 0.2s ease;
 }
 
+/* Hover */
+.calendar-date:hover:not(.past):not(.booked):not(.selected) {
+    background-color: #d8ebff;
+}
+
+/* Past Date */
 .calendar-date.past {
-    color: #aaa;
+    background: #e0e0e0;
+    color: #999;
     cursor: not-allowed;
 }
 
+/* Booked Date */
 .calendar-date.booked {
-    background-color: #f8d7da;
+    background: #f8d7da;
     color: #721c24;
     cursor: not-allowed;
 }
 
+/* Selected Date */
 .calendar-date.selected {
-    background-color: #0070d2;
-    color: white;
+    background: #0176d3;
+    color: #ffffff;
+    font-weight: bold;
 }
-.calendar-date:hover:not(.past):not(.booked):not(.selected) {
-    background-color: #e0e5ee;
+
+/* ===== Button ===== */
+lightning-button {
+    margin-top: 14px;
+}
+lightning-button .slds-button {
+    background-color: #0176d3;
+    border-color: #0176d3;
+    font-weight: 600;
 }
