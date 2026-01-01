@@ -7,6 +7,7 @@ export default class SpeakerList extends LightningElement {
     @api speciality;
 
     @track speakers = [];
+    @track showNoData = false;
 
     columns = [
         { label: 'Name', fieldName: 'Name' },
@@ -29,8 +30,10 @@ export default class SpeakerList extends LightningElement {
     wiredSpeakers({ data, error }) {
         if (data) {
             this.speakers = data;
+            this.showNoData = data.length === 0;
         } else {
             this.speakers = [];
+            this.showNoData = true;
             console.error(error);
         }
     }
@@ -40,12 +43,9 @@ export default class SpeakerList extends LightningElement {
         const row = event.detail.row;
 
         if (actionName === 'book') {
-            console.log('Clicked Speaker:', row.Id); // Debug log
             this.dispatchEvent(
                 new CustomEvent('speakerselect', {
-                    detail: {
-                        speakerId: row.Id
-                    },
+                    detail: { speakerId: row.Id },
                     bubbles: true,
                     composed: true
                 })
