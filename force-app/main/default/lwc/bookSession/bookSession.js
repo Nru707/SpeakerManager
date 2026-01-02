@@ -20,13 +20,14 @@ export default class BookSession extends LightningElement {
     @track calendarDates = [];
     bookedDates = [];
 
+    // Init
     connectedCallback() {
         const today = new Date();
         this.currentMonth = today.getMonth();
         this.currentYear = today.getFullYear();
     }
 
-    //Speaker details
+    // Speaker details
     @wire(getSpeakerDetails, { speakerId: '$speakerId' })
     wiredSpeaker({ data }) {
         if (data) {
@@ -46,7 +47,7 @@ export default class BookSession extends LightningElement {
             });
     }
 
-    //  Month label
+    // Month label
     get monthLabel() {
         return new Date(this.currentYear, this.currentMonth)
             .toLocaleString('default', { month: 'long', year: 'numeric' });
@@ -63,7 +64,7 @@ export default class BookSession extends LightningElement {
         this.generateCalendar();
     }
 
-    //  Previous month (no past)
+    // Prev month (no past month)
     prevMonth() {
         const today = new Date();
         if (
@@ -82,7 +83,7 @@ export default class BookSession extends LightningElement {
         this.generateCalendar();
     }
 
-    //  Weekday alignment
+    // Generate calendar with weekday alignment
     generateCalendar() {
         const dates = [];
         const today = new Date();
@@ -100,7 +101,7 @@ export default class BookSession extends LightningElement {
             0
         ).getDate();
 
-        // Empty cells before 1st date
+        // Empty cells before first date
         for (let i = 0; i < firstDay; i++) {
             dates.push({
                 label: '',
@@ -129,37 +130,56 @@ export default class BookSession extends LightningElement {
         this.calendarDates = dates;
     }
 
-    // Date select
+    // Date click handler
     selectCalendarDate(event) {
         const date = event.target.dataset.date;
 
+        // Ignore empty or past
         if (!date ||
-            event.target.classList.contains('past') ||
-            event.target.classList.contains('booked') ||
-            event.target.classList.contains('empty')) {
+            event.target.classList.contains('empty') ||
+            event.target.classList.contains('past')) {
             return;
         }
 
+        // Booked date → show toast only
+        if (event.target.classList.contains('booked')) {
+            this.showToast(
+                'Already Booked',
+                'This date is already booked',
+                'Alert'
+            );
+            return;
+        }
+
+        // Available date
         this.selectedDate = date;
 
         checkAvailability({ speakerId: this.speakerId, selectedDate: date })
             .then(res => {
                 this.isAvailable = res;
                 if (!res) {
-                    this.showToast('Error', 'Date already booked', 'error');
+                    this.showToast(
+                        'Error',
+                        'Date already booked',
+                        'error'
+                    );
                 }
                 this.generateCalendar();
             });
     }
 
-    // Create session
+    // Create booking
     handleCreate() {
         createSession({ sessionDate: this.selectedDate })
             .then(sessionId =>
                 createAssignment({ speakerId: this.speakerId, sessionId })
             )
             .then(() => {
-                this.showToast('Success', 'Session booked', 'success');
+                this.showToast(
+                    'Success',
+                    'Session booked successfully',
+                    'success'
+                );
                 this.selectedDate = null;
                 this.isAvailable = false;
                 this.loadBookedDates();
