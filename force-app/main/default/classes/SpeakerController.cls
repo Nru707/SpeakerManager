@@ -88,7 +88,7 @@ public with sharing class SpeakerController {
         return sa.isEmpty();
     }
 
-    // Create Session (with CRUD/FLS check)
+    // Create Session
     @AuraEnabled
     public static Id createSession(Date sessionDate) {
         if (!Schema.SObjectType.Session__c.isCreateable()) {
