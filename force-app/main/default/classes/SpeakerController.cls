@@ -1,6 +1,6 @@
 public with sharing class SpeakerController {
 
-    //Search Speakers
+    /* Search Speakers */
     @AuraEnabled(cacheable=true)
     public static List<Speaker__c> searchSpeakers(String name, String speciality) {
 
@@ -21,17 +21,25 @@ public with sharing class SpeakerController {
             params.put('speciality', speciality);
         }
 
-        String soql = 'SELECT Id, Name, Email__c, Speciality__c FROM Speaker__c';
+        String soql =
+            'SELECT Id, Name, Email__c, Speciality__c ' +
+            'FROM Speaker__c';
+
         if (!conditions.isEmpty()) {
             soql += ' WHERE ' + String.join(conditions, ' AND ');
         }
 
-        return Database.queryWithBinds(soql, params, AccessLevel.USER_MODE);
+        return Database.queryWithBinds(
+            soql,
+            params,
+            AccessLevel.USER_MODE
+        );
     }
 
-    // Speaker Details
+    /* Speaker Details */
     @AuraEnabled(cacheable=true)
     public static Speaker__c getSpeakerDetails(Id speakerId) {
+
         if (!Schema.SObjectType.Speaker__c.isAccessible()) {
             throw new AuraHandledException('No access to Speaker');
         }
@@ -45,14 +53,16 @@ public with sharing class SpeakerController {
         ];
     }
 
-    // Booked Dates for Calendar
+    /* Get Booked Dates (Calendar)*/
     @AuraEnabled(cacheable=true)
     public static List<Date> getBookedDates(Id speakerId) {
+
         if (!Schema.SObjectType.Speaker_Assignment__c.isAccessible()) {
             throw new AuraHandledException('No access to Assignments');
         }
 
         List<Date> bookedDates = new List<Date>();
+
         List<Speaker_Assignment__c> assignments = [
             SELECT Session__r.Session_Date__c
             FROM Speaker_Assignment__c
@@ -66,12 +76,17 @@ public with sharing class SpeakerController {
                 bookedDates.add(sa.Session__r.Session_Date__c);
             }
         }
+
         return bookedDates;
     }
 
-    //  Availability Check
+    /* Availability Check */
     @AuraEnabled
-    public static Boolean checkAvailability(Id speakerId, Date selectedDate) {
+    public static Boolean checkAvailability(
+        Id speakerId,
+        Date selectedDate
+    ) {
+
         if (!Schema.SObjectType.Speaker_Assignment__c.isAccessible()) {
             throw new AuraHandledException('No access to Assignments');
         }
@@ -88,40 +103,62 @@ public with sharing class SpeakerController {
         return sa.isEmpty();
     }
 
-    // Create Session
+    /* Create Session */
     @AuraEnabled
     public static Id createSession(Date sessionDate) {
+
         if (!Schema.SObjectType.Session__c.isCreateable()) {
-            throw new AuraHandledException('No permission to create Session');
+            throw new AuraHandledException(
+                'No permission to create Session'
+            );
         }
 
-        Session__c s = new Session__c(Session_Date__c = sessionDate);
-        SObjectAccessDecision decision = Security.stripInaccessible(
-            AccessType.CREATABLE,
-            new List<SObject>{ s }
+        Session__c sessionRec = new Session__c(
+            Session_Date__c = sessionDate
         );
 
-        Database.insert(decision.getRecords(), AccessLevel.USER_MODE);
+        SObjectAccessDecision decision =
+            Security.stripInaccessible(
+                AccessType.CREATABLE,
+                new List<SObject>{ sessionRec }
+            );
+
+        Database.insert(
+            decision.getRecords(),
+            AccessLevel.USER_MODE
+        );
+
         return ((Session__c)decision.getRecords()[0]).Id;
     }
 
-    // Create Assignment
+    /* Create Speaker Assignment */
     @AuraEnabled
-    public static void createAssignment(Id speakerId, Id sessionId) {
+    public static void createAssignment(
+        Id speakerId,
+        Id sessionId
+    ) {
+
         if (!Schema.SObjectType.Speaker_Assignment__c.isCreateable()) {
-            throw new AuraHandledException('No permission to create assignment');
+            throw new AuraHandledException(
+                'No permission to create Assignment'
+            );
         }
 
-        Speaker_Assignment__c sa = new Speaker_Assignment__c(
-            Speaker__c = speakerId,
-            Session__c = sessionId
-        );
+        Speaker_Assignment__c sa =
+            new Speaker_Assignment__c(
+                Speaker__c = speakerId,
+                Session__c = sessionId
+            );
 
-        SObjectAccessDecision decision = Security.stripInaccessible(
-            AccessType.CREATABLE,
-            new List<SObject>{ sa }
-        );
+        SObjectAccessDecision decision =
+            Security.stripInaccessible(
+                AccessType.CREATABLE,
+                new List<SObject>{ sa }
+            );
 
-        Database.insert(decision.getRecords(), AccessLevel.USER_MODE);
+        Database.insert(
+            decision.getRecords(),
+            AccessLevel.USER_MODE
+        );
     }
 }
