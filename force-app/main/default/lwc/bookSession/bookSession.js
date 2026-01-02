@@ -1,9 +1,9 @@
 import { LightningElement, api, wire, track } from 'lwc';
 import getSpeakerDetails from '@salesforce/apex/SpeakerController.getSpeakerDetails';
+import getBookedDates from '@salesforce/apex/SpeakerController.getBookedDates';
 import checkAvailability from '@salesforce/apex/SpeakerController.checkAvailability';
 import createSession from '@salesforce/apex/SpeakerController.createSession';
 import createAssignment from '@salesforce/apex/SpeakerController.createAssignment';
-import getBookedDates from '@salesforce/apex/SpeakerController.getBookedDates';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 
 export default class BookSession extends LightningElement {
@@ -11,23 +11,23 @@ export default class BookSession extends LightningElement {
     @api speakerId;
 
     speaker;
-    selectedDate;
+    selectedDate;          // yyyy-MM-dd
     isAvailable = false;
 
     currentMonth;
     currentYear;
 
     @track calendarDates = [];
-    bookedDates = [];
+    bookedDates = [];      // yyyy-MM-dd[]
 
-    // Init
+    // ================= INIT =================
     connectedCallback() {
         const today = new Date();
         this.currentMonth = today.getMonth();
         this.currentYear = today.getFullYear();
     }
 
-    // Speaker details
+    // ================= SPEAKER =================
     @wire(getSpeakerDetails, { speakerId: '$speakerId' })
     wiredSpeaker({ data }) {
         if (data) {
@@ -36,24 +36,32 @@ export default class BookSession extends LightningElement {
         }
     }
 
-    // Load booked dates
+    // ================= SAFE LOCAL FORMAT =================
+    formatDateLocal(dateObj) {
+        const y = dateObj.getFullYear();
+        const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const d = String(dateObj.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+    }
+
+    // ================= BOOKED DATES =================
     loadBookedDates() {
         getBookedDates({ speakerId: this.speakerId })
             .then(data => {
-                this.bookedDates = data.map(
-                    d => new Date(d).toISOString().split('T')[0]
-                );
+                // 🔴 IMPORTANT FIX
+                // Apex Date already comes as yyyy-MM-dd
+                // NEVER wrap in new Date()
+                this.bookedDates = data;
                 this.generateCalendar();
             });
     }
 
-    // Month label
+    // ================= MONTH LABEL =================
     get monthLabel() {
         return new Date(this.currentYear, this.currentMonth)
             .toLocaleString('default', { month: 'long', year: 'numeric' });
     }
 
-    // Next month
     nextMonth() {
         if (this.currentMonth === 11) {
             this.currentMonth = 0;
@@ -64,15 +72,12 @@ export default class BookSession extends LightningElement {
         this.generateCalendar();
     }
 
-    // Prev month (no past month)
     prevMonth() {
         const today = new Date();
         if (
             this.currentYear === today.getFullYear() &&
             this.currentMonth === today.getMonth()
-        ) {
-            return;
-        }
+        ) return;
 
         if (this.currentMonth === 0) {
             this.currentMonth = 11;
@@ -83,7 +88,7 @@ export default class BookSession extends LightningElement {
         this.generateCalendar();
     }
 
-    // Generate calendar with weekday alignment
+    // ================= CALENDAR =================
     generateCalendar() {
         const dates = [];
         const today = new Date();
@@ -93,7 +98,7 @@ export default class BookSession extends LightningElement {
             this.currentYear,
             this.currentMonth,
             1
-        ).getDay(); // 0 = Sunday
+        ).getDay();
 
         const daysInMonth = new Date(
             this.currentYear,
@@ -101,28 +106,30 @@ export default class BookSession extends LightningElement {
             0
         ).getDate();
 
-        // Empty cells before first date
+        // Empty cells
         for (let i = 0; i < firstDay; i++) {
             dates.push({
+                key: 'e' + i,
                 label: '',
                 value: null,
                 cssClass: 'calendar-date empty'
             });
         }
 
-        // Actual dates
+        // Actual days
         for (let day = 1; day <= daysInMonth; day++) {
             const d = new Date(this.currentYear, this.currentMonth, day);
-            const iso = d.toISOString().split('T')[0];
+            const localDate = this.formatDateLocal(d);
 
             let css = 'calendar-date';
             if (d < today) css += ' past';
-            if (this.bookedDates.includes(iso)) css += ' booked';
-            if (this.selectedDate === iso) css += ' selected';
+            if (this.bookedDates.includes(localDate)) css += ' booked';
+            if (this.selectedDate === localDate) css += ' selected';
 
             dates.push({
+                key: localDate,
                 label: day,
-                value: iso,
+                value: localDate,
                 cssClass: css
             });
         }
@@ -130,28 +137,25 @@ export default class BookSession extends LightningElement {
         this.calendarDates = dates;
     }
 
-    // Date click handler
+    // ================= DATE CLICK =================
     selectCalendarDate(event) {
         const date = event.target.dataset.date;
 
-        // Ignore empty or past
         if (!date ||
             event.target.classList.contains('empty') ||
             event.target.classList.contains('past')) {
             return;
         }
 
-        // Booked date → show toast only
         if (event.target.classList.contains('booked')) {
             this.showToast(
-                'Already Booked',
+                'Warning',
                 'This date is already booked',
-                'Alert'
+                'warning'
             );
             return;
         }
 
-        // Available date
         this.selectedDate = date;
 
         checkAvailability({ speakerId: this.speakerId, selectedDate: date })
@@ -159,27 +163,24 @@ export default class BookSession extends LightningElement {
                 this.isAvailable = res;
                 if (!res) {
                     this.showToast(
-                        'Error',
+                        'Warning',
                         'Date already booked',
-                        'error'
+                        'warning'
                     );
                 }
                 this.generateCalendar();
             });
     }
 
-    // Create booking
+    // ================= CREATE =================
     handleCreate() {
+        // selectedDate is yyyy-MM-dd → SAFE for Apex Date
         createSession({ sessionDate: this.selectedDate })
             .then(sessionId =>
                 createAssignment({ speakerId: this.speakerId, sessionId })
             )
             .then(() => {
-                this.showToast(
-                    'Success',
-                    'Session booked successfully',
-                    'success'
-                );
+                this.showToast('Success', 'Session booked successfully', 'success');
                 this.selectedDate = null;
                 this.isAvailable = false;
                 this.loadBookedDates();
